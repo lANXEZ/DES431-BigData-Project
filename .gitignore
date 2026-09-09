@@ -1,0 +1,43 @@
+# ---------------------------------------------------------------------------
+# Large data - NOT stored in git. Everything here is reproducible.
+# ---------------------------------------------------------------------------
+
+# Raw source CSVs: 1.1 GB total, and nine individual files exceed GitHub's
+# 100 MB hard limit. Download them yourself - see archive/README.md
+archive/CSV_Files/*.csv
+
+# Curated Parquet fact table: 345 MB.
+#   regenerate with:  python scripts/02_preprocess.py
+outputs/clean/
+
+# Reject audit trail: 7.5 MB of Parquet.
+#   regenerate with:  python scripts/02_preprocess.py
+outputs/rejects/
+
+# ---------------------------------------------------------------------------
+# Course material - the instructor's, not ours to redistribute
+# ---------------------------------------------------------------------------
+DES431-BigData-Project2026.pdf
+
+# ---------------------------------------------------------------------------
+# Python
+# ---------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+.pytest_cache/
+*.egg-info/
+
+# ---------------------------------------------------------------------------
+# OS and editor
+# ---------------------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+*.swp

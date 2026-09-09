@@ -1,0 +1,9 @@
+# Pinned to the versions this pipeline was developed and validated against.
+pandas==3.0.3
+numpy==2.4.6
+pyarrow==25.0.1
+matplotlib==3.11.0
+
+# Only needed to run scripts/spark_preprocess.py locally.
+# AWS Glue supplies its own Spark runtime - do not install it there.
+# pyspark==3.5.1

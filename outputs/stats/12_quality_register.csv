@@ -1,0 +1,8 @@
+rule,description,rows_matched,rows_removed_by_this_rule,pct_of_raw
+R1_missing_end_coords,End coordinates absent - trip distance is not computable,5442,5442,0.0982
+R2_negative_duration,ended_at earlier than started_at - impossible,43,43,0.0008
+R3_duration_under_60s,Under 60 seconds - failed checkout / immediate re-dock,136390,136390,2.4621
+R4_duration_over_24h,"Over 24 hours - system auto-close, not a real ride",5533,208,0.0038
+R5_coords_outside_chicago,Coordinates outside the Chicago service area - GPS error,24,24,0.0004
+R6_implausible_speed,Average speed over 60 km/h - impossible on a bicycle,18046,243,0.0044
+TOTAL,All rules combined (rows are counted once),165478,142350,2.5697

@@ -1,0 +1,6 @@
+check,value
+distinct cleaned station names,1920
+distinct station_id values,3435
+names mapping to >1 station_id,1589
+station_ids mapping to >1 name,105
+raw names with whitespace defects,13

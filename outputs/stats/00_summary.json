@@ -1,0 +1,24 @@
+{
+  "total_rows": 5539521,
+  "n_columns": 13,
+  "n_files": 12,
+  "date_range": [
+    "2024-09-30 19:20:32.996000",
+    "2025-09-30 23:59:57.191000"
+  ],
+  "duplicate_ride_id_within_file": 0,
+  "duplicate_ride_id_across_files": 0,
+  "distinct_station_names": 1920,
+  "both_stations_missing": 535367,
+  "exactly_one_station_missing": 1234130,
+  "coord_range_lat": [
+    35.5,
+    83.14
+  ],
+  "coord_range_lng": [
+    -94.27,
+    152.53
+  ],
+  "coords_outside_chicago_bbox": 24,
+  "total_rows_matching_any_quality_rule": null
+}

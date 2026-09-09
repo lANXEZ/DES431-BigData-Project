@@ -1,0 +1,34 @@
+column,athena_type,partition_key,origin,description,note
+ride_id,string,False,source,Unique trip identifier,carried through unchanged
+rideable_type,string,False,source,classic_bike | electric_bike,carried through unchanged
+member_casual,string,False,source,member | casual,carried through unchanged
+started_at,timestamp,False,source,Trip start timestamp,carried through unchanged
+ended_at,timestamp,False,source,Trip end timestamp,carried through unchanged
+start_station_name,string,False,source,"Start station, whitespace-normalised",cleaned (trim + collapse internal spaces)
+start_station_id,string,False,source,"Original Divvy code, kept for traceability only",carried through - DO NOT JOIN ON THIS
+start_station_key,string,False,ENGINEERED,"Name-derived surrogate key, e.g. CLARK_ST_ARMITAGE_AVE",ENGINEERED - the stable join key
+end_station_name,string,False,source,"End station, whitespace-normalised",cleaned
+end_station_id,string,False,source,"Original Divvy code, traceability only",carried through - DO NOT JOIN ON THIS
+end_station_key,string,False,ENGINEERED,Name-derived surrogate key,ENGINEERED - the stable join key
+start_lat,double,False,source,Start latitude,validated against Chicago bbox
+start_lng,double,False,source,Start longitude,validated against Chicago bbox
+end_lat,double,False,source,End latitude,validated; rows with nulls removed
+end_lng,double,False,source,End longitude,validated; rows with nulls removed
+start_geohash7,string,False,ENGINEERED,Geohash precision 7 (~153 m cell) of the start point,"ENGINEERED - spatial bin, present on EVERY row"
+end_geohash7,string,False,ENGINEERED,Geohash precision 7 of the end point,"ENGINEERED - spatial bin, present on EVERY row"
+duration_min,float,False,ENGINEERED,Trip duration in minutes,"ENGINEERED - (ended_at - started_at), bounded to [1, 1440]"
+haversine_km,float,False,ENGINEERED,"Straight-line start-to-end distance, km",ENGINEERED - lower bound on distance actually ridden
+avg_speed_kmh,float,False,ENGINEERED,haversine_km / duration hours,ENGINEERED - also used as an outlier detector
+trip_type,string,False,ENGINEERED,docked | dockless_start | dockless_end | fully_dockless,ENGINEERED - encodes the structural missingness
+is_round_trip,boolean,False,ENGINEERED,Start station equals end station; NULL unless trip_type = docked,ENGINEERED
+trip_date,string,False,ENGINEERED,"Calendar date of started_at, yyyy-MM-dd",ENGINEERED
+year,smallint,True,ENGINEERED,Year of started_at,ENGINEERED - Hive partition key
+month,tinyint,True,ENGINEERED,"Month of started_at, 1-12",ENGINEERED - Hive partition key
+day,tinyint,False,ENGINEERED,Day of month,ENGINEERED
+hour,tinyint,False,ENGINEERED,"Hour of started_at, 0-23",ENGINEERED
+day_of_week,tinyint,False,ENGINEERED,0 = Monday .. 6 = Sunday,ENGINEERED
+day_name,string,False,ENGINEERED,Monday .. Sunday,ENGINEERED
+is_weekend,boolean,False,ENGINEERED,day_of_week >= 5,ENGINEERED
+season,string,False,ENGINEERED,Winter | Spring | Summer | Fall (meteorological),ENGINEERED
+time_of_day,string,False,ENGINEERED,Night 0-5 | Morning 6-11 | Afternoon 12-17 | Evening 18-23,ENGINEERED
+is_rush_hour,boolean,False,ENGINEERED,Weekday and hour in 07-09 or 16-18,ENGINEERED

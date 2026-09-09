@@ -1,0 +1,3 @@
+rideable_type,rows,missing_start_station,missing_end_station,pct_missing_start,pct_missing_end
+electric_bike,3462468,1129029,1170283,32.61,33.8
+classic_bike,2077053,0,5552,0.0,0.27

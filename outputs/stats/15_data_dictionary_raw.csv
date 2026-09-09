@@ -1,0 +1,14 @@
+column,type,pct_missing,description,note
+ride_id,string,0.0,"Unique trip identifier, 16-char hex",Natural primary key. Verified unique across all 12 files.
+rideable_type,string,0.0,Bike class: classic_bike | electric_bike,Determines whether station fields can be present at all.
+started_at,timestamp,0.0,"Trip start timestamp, local Chicago time, ms precision",Basis for every temporal feature and for partitioning.
+ended_at,timestamp,0.0,Trip end timestamp,Used with started_at to derive duration.
+start_station_name,string,20.38,Docking station where the trip began,"NULL for dockless e-bike trips - structural, not an error."
+start_station_id,string,20.38,Divvy internal station code,UNRELIABLE: re-numbered and recycled mid-period. Do not join on this.
+end_station_name,string,21.23,Docking station where the trip ended,NULL for dockless e-bike trips.
+end_station_id,string,21.23,Divvy internal station code,Same reliability problem as start_station_id.
+start_lat,double,0.0,"Start latitude, WGS84 decimal degrees",Always populated. Basis for spatial binning.
+start_lng,double,0.0,"Start longitude, WGS84 decimal degrees",Always populated.
+end_lat,double,0.1,End latitude,"Missing on 5,442 rows where the bike was never properly returned."
+end_lng,double,0.1,End longitude,"Missing on the same 5,442 rows."
+member_casual,string,0.0,Rider type: member (subscriber) | casual (pay-per-ride),Primary segmentation dimension.

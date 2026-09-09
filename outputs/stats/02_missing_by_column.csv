@@ -1,0 +1,14 @@
+column,dtype,missing,pct_missing
+ride_id,string,0,0.0
+rideable_type,string,0,0.0
+started_at,datetime64[ns],0,0.0
+ended_at,datetime64[ns],0,0.0
+start_station_name,string,1129029,20.38
+start_station_id,string,1129029,20.38
+end_station_name,string,1175835,21.23
+end_station_id,string,1175835,21.23
+start_lat,float64,0,0.0
+start_lng,float64,0,0.0
+end_lat,float64,5442,0.1
+end_lng,float64,5442,0.1
+member_casual,string,0,0.0

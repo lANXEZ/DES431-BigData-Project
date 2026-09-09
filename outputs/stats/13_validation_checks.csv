@@ -1,0 +1,14 @@
+check,result,detail
+duration >= 60 s for every row,PASS,min = 1.0000 min
+duration <= 24 h for every row,PASS,max = 1439.82 min
+no negative durations,PASS,min = 1.0000 min
+no duplicate ride_id,PASS,0 duplicates
+no null ride_id / duration / coords,PASS,
+all start coords inside Chicago bbox,PASS,"lat [41.6400, 42.0700]"
+all end coords inside Chicago bbox,PASS,"lat [41.6100, 42.1500]"
+avg speed <= 60 km/h,PASS,max = 59.83 km/h
+geohash present for every row,PASS,
+trip_type has no nulls and only 4 levels,PASS,docked / dockless_end / dockless_start / fully_dockless
+is_round_trip is NA exactly when a station is missing,PASS,
+hour in 0..23 and day_of_week in 0..6,PASS,
+dockless rows retained (structural missingness preserved),PASS,"1,656,158 dockless-endpoint trips kept"
