@@ -4,8 +4,15 @@
 Learning · Sirindhorn International Institute of Technology
 
 A reproducible pipeline that turns 12 months of raw Chicago bike-share trip records
-into a validated, partitioned, feature-engineered Parquet dataset ready for
-Spark/Athena analytics on AWS.
+into a validated, feature-engineered dataset ready for the group's analytics stages.
+
+> **Scope.** This repository is **Workstream 1 of 6**: *Data Understanding* and
+> *Data Preprocessing*. The AWS pipeline (S3, Glue, Spark, Athena) is Workstream 2
+> and belongs to another team member; analytics is Workstream 3. Nothing here has
+> ever touched an AWS service — no SDK, no credentials, no cloud calls. Optional
+> starter code offered to the Workstream 2 owner is parked in
+> [`for-stage-2/`](for-stage-2/README.md) and is **not** claimed as a deliverable
+> of this workstream.
 
 | | |
 |---|---|
@@ -60,7 +67,7 @@ pip install -r requirements.txt
 python scripts/01_profile.py          # profiling  → outputs/stats, figures F1–F7
 python scripts/02_preprocess.py       # clean+engineer → outputs/clean (Parquet)
 python scripts/03_validate.py         # 13 checks + reconciliation card, F8–F10
-python scripts/04_data_dictionary.py  # schemas + Athena DDL
+python scripts/04_data_dictionary.py  # schemas
 ```
 
 Every script streams **one month at a time** and never holds all 5.5 M rows in
@@ -77,12 +84,14 @@ memory, so the pipeline runs comfortably in 8 GB of RAM.
 │   ├── 01_profile.py           profiling only, mutates nothing
 │   ├── 02_preprocess.py        cleaning, transformation, feature engineering
 │   ├── 03_validate.py          assertions + reconciliation card
-│   ├── 04_data_dictionary.py   schema docs + Athena DDL generator
-│   └── spark_preprocess.py     PySpark port for AWS Glue
+│   └── 04_data_dictionary.py   schema docs
+├── for-stage-2/                NOT a Workstream 1 deliverable - see its README
+│   ├── spark_preprocess.py     PySpark port for AWS Glue - never executed
+│   └── athena_create_table.sql generated DDL - never run against Athena
 └── outputs/
     ├── stats/                  19 profiling tables (tracked)
     ├── figures/                10 report figures (tracked)
-    ├── handoff/                station dimension, hourly flows, Athena DDL (tracked)
+    ├── handoff/                station_dim (WS1), station_hourly_flow (for WS3)
     ├── clean/                  curated Parquet — gitignored, regenerable
     └── rejects/                dropped rows + reason — gitignored, regenerable
 ```
@@ -97,7 +106,7 @@ flowchart LR
     B --> F["outputs/figures/<br/>10 report figures"]
     C --> D["outputs/clean/<br/>Parquet, year/month<br/>5.40 M rows · 33 cols"]
     C --> R["outputs/rejects/<br/>142,350 rows<br/>+ reject_reason"]
-    C --> H["outputs/handoff/<br/>station_dim · flows · DDL"]
+    C --> H["outputs/handoff/<br/>station_dim · flows"]
     D --> V["03_validate.py<br/>13 checks + reconciliation card"]
     D --> N["→ Stage 2: S3 / Glue / Athena"]
     H --> N
@@ -146,28 +155,21 @@ A missing **station name** is deliberately *not* a rule — see the headline fin
   invisible to spatial analysis. Geohashes are hierarchical, so truncating the
   string zooms out with no re-processing.
 
-## AWS handoff
+## What the next stage receives
 
-`scripts/spark_preprocess.py` is a line-for-line PySpark port, including a pure
-Spark SQL geohash encoder, runnable as a Glue job:
+The boundary of this workstream is an **interface**, not a pipeline:
 
-```bash
-spark-submit scripts/spark_preprocess.py \
-    --input   s3://<bucket>/raw/divvy/ \
-    --output  s3://<bucket>/curated/divvy_trips/ \
-    --rejects s3://<bucket>/rejects/divvy/
-```
+1. **The output schema** — 33 columns, Snappy Parquet, partitioned by `year`/`month`.
+   Parquet because 5.4 M rows have to be serialised somewhere and columnar is the
+   sensible choice at that size. The S3 layout, catalogue strategy and any
+   re-partitioning are open questions for Workstream 2.
+2. **`outputs/stats/14_reconciliation_card.csv`** — the acceptance test. When a
+   pipeline is split across people, the cleaning logic tends to get written twice and
+   the two versions quietly disagree. Any reimplementation must reproduce all 17
+   metrics exactly; if one differs, the implementations have diverged.
 
-`outputs/handoff/athena_create_table.sql` is generated from the real Parquet schema,
-so the table definition cannot drift from the data.
-
-`outputs/stats/14_reconciliation_card.csv` is the acceptance test — 17 metrics the
-Glue run must reproduce exactly. If any differs, the pandas and Spark
-implementations have diverged and the cause must be found before analysis starts.
-
-> ⚠️ The Spark port is syntax-checked but has **not** been executed (no local Spark
-> install). Validate it on a single month against the reconciliation card before
-> running it on all twelve.
+Starter code for Workstream 2 — a PySpark port and a generated Athena DDL — is in
+[`for-stage-2/`](for-stage-2/README.md), clearly marked as optional and unexecuted.
 
 ## Data source
 

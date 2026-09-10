@@ -28,7 +28,7 @@ flowchart LR
     B --> F["outputs/figures/<br/>10 report figures"]
     C --> D["outputs/clean/<br/>Parquet, year/month<br/>5.40 M rows · 33 cols"]
     C --> R["outputs/rejects/<br/>142,350 rows<br/>+ reject_reason"]
-    C --> H["outputs/handoff/<br/>station_dim · flows · DDL"]
+    C --> H["outputs/handoff/<br/>station_dim · flows"]
     D --> V["03_validate.py<br/>13 checks + reconciliation card"]
     D --> N["→ Stage 2: S3 / Glue / Athena"]
     H --> N
@@ -63,7 +63,7 @@ pip install pandas numpy pyarrow matplotlib
 python scripts/01_profile.py          # ~3 min  → stats + figures F1–F7
 python scripts/02_preprocess.py       # ~6 min  → clean Parquet + rejects + handoff
 python scripts/03_validate.py         # ~2 min  → 13 checks + figures F8–F10
-python scripts/04_data_dictionary.py  # instant → data dictionaries + Athena DDL
+python scripts/04_data_dictionary.py  # instant → data dictionaries
 ```
 
 Every script streams **one month at a time** and never holds the full 5.5 M rows in
@@ -79,14 +79,16 @@ Project/
 │   ├── 01_profile.py           TASK 1 — profiling, no mutation
 │   ├── 02_preprocess.py        TASK 2 — cleaning, transformation, features
 │   ├── 03_validate.py          TASK 2 — assertions + reconciliation card
-│   ├── 04_data_dictionary.py   schema documentation + Athena DDL
-│   └── spark_preprocess.py     PySpark port of 02 for AWS Glue
+│   └── 04_data_dictionary.py   schema documentation
+├── for-stage-2/                optional scaffolding for the AWS owner (NOT a WS1 deliverable)
+│   ├── spark_preprocess.py     PySpark port of 02 for AWS Glue - never executed
+│   └── athena_create_table.sql generated DDL - never run against Athena
 └── outputs/
     ├── stats/                  19 CSV/JSON profiling tables
     ├── figures/                10 PNG figures for the deck and report
     ├── clean/year=/month=/     curated Parquet fact table
     ├── rejects/                every dropped row + why
-    └── handoff/                station_dim · station_hourly_flow · athena DDL
+    └── handoff/                station_dim (WS1) · station_hourly_flow (for Stage 3)
 ```
 
 ---
@@ -505,8 +507,9 @@ spatial analysis.**
 
 ⚠ = retained for traceability only; never join on it.
 
-*Generated: `outputs/stats/16_data_dictionary_clean.csv`. Executable DDL:
-`outputs/handoff/athena_create_table.sql`.*
+*Generated: `outputs/stats/16_data_dictionary_clean.csv`. An executable Athena DDL
+derived from this schema is parked in `for-stage-2/` as scaffolding — see the scope
+note in §12.*
 
 ### Storage
 
@@ -551,44 +554,29 @@ asserts the cleaning contract. All 13 checks pass.
 
 *Generated: `outputs/stats/13_validation_checks.csv`*
 
-## 12. Handoff to the AWS / Big Data stage
+## 12. Interface contract for the next stage
 
-The commonest failure mode in a project split this way is that cleaning is written
-twice — once in pandas, once in Spark — and the two quietly disagree. Three artefacts
-exist to prevent that.
+> **Scope note.** Workstream 1 covers *Data Understanding* and *Data Preprocessing*.
+> The AWS pipeline — S3, Glue, Spark, Parquet catalogues, Athena — is **Stage 2's
+> work**, and the design decisions there are Stage 2's to make. What follows is only
+> the interface: what this stage *produces*, and how to verify any reimplementation
+> of it agrees. Optional starter code is parked in
+> [`for-stage-2/`](for-stage-2/README.md) and is explicitly not claimed as a
+> Workstream 1 deliverable.
 
-**1. `scripts/spark_preprocess.py`** — a line-for-line PySpark port of the pandas
-pipeline, including a pure Spark SQL implementation of the geohash encoder, ready to
-run as a Glue job:
+Two things define the boundary.
 
-```bash
-spark-submit scripts/spark_preprocess.py \
-    --input   s3://<bucket>/raw/divvy/ \
-    --output  s3://<bucket>/curated/divvy_trips/ \
-    --rejects s3://<bucket>/rejects/divvy/
-```
+**1. The output schema** — §10 above. 33 columns, Snappy Parquet, partitioned by
+`year` / `month`. Parquet is used because this stage has to serialise 5.4 M rows
+somewhere and a columnar format is the sensible choice at that size; the S3 layout,
+catalogue strategy and any re-partitioning are open questions for Stage 2.
 
-Two portability details are handled explicitly: Spark's `dayofweek` is 1 = Sunday and
-is shifted to match the pandas 0 = Monday convention, and the rule thresholds are
-duplicated at the top of the file because a Glue job cannot import `common.py` — if
-one changes, **both must change**.
-
-**2. `outputs/handoff/athena_create_table.sql`** — generated from the real Parquet
-schema, so the table definition cannot drift from the data:
-
-```sql
-CREATE EXTERNAL TABLE IF NOT EXISTS divvy.trips_clean ( ... )
-PARTITIONED BY (`year` smallint, `month` tinyint)
-STORED AS PARQUET
-LOCATION 's3://<your-bucket>/curated/divvy_trips/';
-
-MSCK REPAIR TABLE divvy.trips_clean;   -- required: loads the 14 partitions
-```
-
-**3. `outputs/stats/14_reconciliation_card.csv`** — the acceptance test. After the
-Glue job runs, `reconcile()` prints these same metrics. **Every value must match.**
-If any differs, the two implementations have diverged and the difference must be
-found before analysis begins.
+**2. `outputs/stats/14_reconciliation_card.csv`** — the acceptance test. The
+commonest failure mode when a pipeline is split across people is that the cleaning
+logic gets written twice and the two versions quietly disagree, with nobody noticing
+until the analysis numbers don't add up. **Any reimplementation must reproduce every
+value below exactly.** If one differs, the implementations have diverged and the
+cause should be found before analytics begins.
 
 | Metric | Expected |
 |---|---:|
@@ -618,8 +606,12 @@ found before analysis begins.
 | `handoff/station_hourly_flow.parquet` | 2,353,242 | `station_key` × `trip_date` × `hour` → `departures`, `arrivals`, `net_flow` |
 
 `net_flow = arrivals − departures`; positive means bikes accumulate at that station
-in that hour. This is the direct input to the station-imbalance and rebalancing
-analysis.
+in that hour.
+
+These are **convenience aggregates prepared for Stage 3**, not analysis. They count
+departures and arrivals and do nothing else — how imbalance is defined, thresholded
+or acted on is Stage 3's call. See
+[`outputs/handoff/README.md`](outputs/handoff/README.md).
 
 ## 13. Limitations
 
