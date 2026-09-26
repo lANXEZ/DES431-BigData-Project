@@ -68,6 +68,10 @@ python scripts/01_profile.py          # profiling  → outputs/stats, figures F1
 python scripts/02_preprocess.py       # clean+engineer → outputs/clean (Parquet)
 python scripts/03_validate.py         # 13 checks + reconciliation card, F8–F10
 python scripts/04_data_dictionary.py  # schemas
+
+# Kick-off document, sections 3-4 (needs the raw CSVs for the first run only)
+python scripts/05_kickoff_figures.py  # 21 figures K01-K21 + 7 tables
+python scripts/06_build_kickoff_docx.py   # → outputs/docs/*.docx
 ```
 
 Every script streams **one month at a time** and never holds all 5.5 M rows in
@@ -84,13 +88,18 @@ memory, so the pipeline runs comfortably in 8 GB of RAM.
 │   ├── 01_profile.py           profiling only, mutates nothing
 │   ├── 02_preprocess.py        cleaning, transformation, feature engineering
 │   ├── 03_validate.py          assertions + reconciliation card
-│   └── 04_data_dictionary.py   schema docs
+│   ├── 04_data_dictionary.py   schema docs
+│   ├── 05_kickoff_figures.py   kick-off §3–§4 figures + tables (cached)
+│   └── 06_build_kickoff_docx.py  assembles those into the Word deliverable
 ├── for-stage-2/                NOT a Workstream 1 deliverable - see its README
 │   ├── spark_preprocess.py     PySpark port for AWS Glue - never executed
 │   └── athena_create_table.sql generated DDL - never run against Athena
 └── outputs/
     ├── stats/                  19 profiling tables (tracked)
+    │   └── kickoff/            7 kick-off tables (tracked; cache gitignored)
     ├── figures/                10 report figures (tracked)
+    │   └── kickoff/            21 kick-off figures K01–K21 (tracked)
+    ├── docs/                   kick-off document §3–§4 (.docx)
     ├── handoff/                station_dim (WS1), station_hourly_flow (for WS3)
     ├── clean/                  curated Parquet — gitignored, regenerable
     └── rejects/                dropped rows + reason — gitignored, regenerable

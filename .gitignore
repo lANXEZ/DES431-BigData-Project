@@ -14,10 +14,19 @@ outputs/clean/
 #   regenerate with:  python scripts/02_preprocess.py
 outputs/rejects/
 
+# Cached profiling accumulators: 4.7 MB pickle, purely a build cache that lets
+# the kick-off figures be restyled without re-reading the 1.1 GB of CSVs.
+#   regenerate with:  python scripts/05_kickoff_figures.py --refresh
+outputs/stats/kickoff/_accumulators.pkl
+
 # ---------------------------------------------------------------------------
 # Course material - the instructor's, not ours to redistribute
 # ---------------------------------------------------------------------------
 DES431-BigData-Project2026.pdf
+
+# Reference kick-off document from a previous cohort, used only as a structural
+# template for our own write-up. Not ours to redistribute either.
+DES431 - MusicTrend Kick-off Document.pdf
 
 # ---------------------------------------------------------------------------
 # Python

@@ -1,0 +1,21 @@
+{
+  "total_rows": 5539521,
+  "n_files": 12,
+  "n_columns": 13,
+  "raw_size_mb": 1119.1,
+  "date_min": "2024-09-30 19:20:32.996000",
+  "date_max": "2025-09-30 23:59:57.191000",
+  "distinct_start_stations": 1915,
+  "distinct_station_names": 1920,
+  "distinct_station_ids": 3435,
+  "names_with_multiple_ids": 1589,
+  "correlation_complete_cases": 5534036,
+  "bike_type_counts": {
+    "electric_bike": 3462468,
+    "classic_bike": 2077053
+  },
+  "user_type_counts": {
+    "member": 3543363,
+    "casual": 1996158
+  }
+}

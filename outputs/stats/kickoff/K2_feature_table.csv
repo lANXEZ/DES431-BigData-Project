@@ -1,0 +1,14 @@
+#,feature,data_type,description,range,example,missing,pct_missing
+1,ride_id,string,Unique trip identifier (16-character hex),-,4422E707103AA4FF,0,0.0
+2,rideable_type,string,Bike class used for the trip,classic_bike | electric_bike,electric_bike,0,0.0
+3,started_at,timestamp,"Trip start timestamp, local Chicago time",2024-09-30 19:20  to  2025-09-30 23:57,2024-10-14 03:26:04,0,0.0
+4,ended_at,timestamp,"Trip end timestamp, local Chicago time",2024-10-01 00:00  to  2025-09-30 23:59,2024-10-14 03:32:56,0,0.0
+5,start_station_name,string,Docking station where the trip began,1915 distinct values,California Ave & Milwaukee Ave,1129029,20.38
+6,start_station_id,string,Divvy internal station code for the origin,3399 distinct values,13084,1129029,20.38
+7,end_station_name,string,Docking station where the trip ended,1917 distinct values,California Ave & Milwaukee Ave,1175835,21.23
+8,end_station_id,string,Divvy internal station code for the destination,3414 distinct values,13084,1175835,21.23
+9,start_lat,double,"Origin latitude, WGS84 decimal degrees",41.6400  to  42.0700,41.96,0,0.0
+10,start_lng,double,"Origin longitude, WGS84 decimal degrees",-87.8900  to  -87.5200,-87.65,0,0.0
+11,end_lat,double,"Destination latitude, WGS84 decimal degrees",35.5000  to  83.1400,41.98,5442,0.1
+12,end_lng,double,"Destination longitude, WGS84 decimal degrees",-94.2700  to  152.5300,-87.67,5442,0.1
+13,member_casual,string,Rider subscription type,casual | member,member,0,0.0
