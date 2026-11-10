@@ -27,15 +27,18 @@ archive/CSV_Files/
 
 The same 12 files are also mirrored on Kaggle if the official S3 bucket is slow.
 
+If you keep the CSVs somewhere else, set the `DIVVY_RAW_DIR` environment variable to
+that folder instead; every script reads it.
+
 ## Then rebuild everything
 
-```bash
-pip install -r ../requirements.txt
-python ../scripts/02_preprocess.py    # → outputs/clean/ and outputs/rejects/
-python ../scripts/03_validate.py      # confirms 13/13 checks pass
-```
+From the repository root:
 
-Run from the repository root, not from this directory.
+```bash
+pip install -r requirements.txt
+python scripts/02_preprocess.py    # → outputs/clean/ and outputs/rejects/
+python scripts/03_validate.py      # confirms 13/13 checks pass
+```
 
 ## Expected schema
 

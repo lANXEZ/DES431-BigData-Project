@@ -78,7 +78,40 @@ Run them in order: each script reads what the earlier ones wrote. `05` also read
 `outputs/handoff/station_dim.csv` (from `02`) and `03_missing_by_biketype.csv`
 (from `01`), both tracked in git. It needs the raw CSVs only on its first run, or
 with `--refresh`; after that it re-renders from a cached pass. If the CSVs are not
-in `archive/CSV_Files/`, point the `DIVVY_RAW_DIR` environment variable at them.
+in `archive/CSV_Files/`, point the `DIVVY_RAW_DIR` environment variable at them;
+every script honours it.
+
+### Preprocessing with PySpark
+
+`scripts/02_preprocess_spark.py` is a PySpark implementation of step `02`. It writes
+the same files to the same paths, so it can replace `02_preprocess.py` in the
+sequence above:
+
+```bash
+python scripts/02_preprocess_spark.py                      # → outputs/
+python scripts/02_preprocess_spark.py --out-root <dir>     # write somewhere else
+```
+
+It was checked against the pandas version on the full dataset:
+
+- `11_cleaning_audit.csv`, `12_quality_register.csv`, `station_dim.csv` and
+  `station_hourly_flow.parquet` are identical.
+- All 5,397,171 clean rows and 142,350 rejects match on every column except
+  `start_lat`/`end_lat`, which differ by one unit in the last place (~10⁻¹⁵°)
+  on about 2.6% of rows. Spark parses those 17-digit values exactly; pandas'
+  default CSV parser does not. No derived column is affected.
+- `03_validate.py` and `04_data_dictionary.py` run unchanged on its output: 13/13
+  checks pass and the reconciliation card, data dictionaries and F8–F10 come
+  out byte-identical.
+- The rejects carry one extra column, `source_file`.
+
+It takes about 6 minutes locally against about 2 for pandas: at 1 GB, Spark's
+start-up and shuffle overhead outweigh its parallelism.
+
+**Requirements:** `pyspark` (in `requirements.txt`) and Java 17 or newer (tested with
+Java 25). On Windows, Spark also needs `winutils.exe` and `hadoop.dll` for Hadoop
+3.x in `%HADOOP_HOME%\bin`, with `HADOOP_HOME` set and `%HADOOP_HOME%\bin` on
+`PATH`. Without them Spark starts but fails when writing Parquet.
 
 `01`, `02` and `05` stream the raw data **one month at a time** and keep only
 running aggregates, so they never hold all 5.5 M rows in memory. `03_validate.py`
@@ -95,6 +128,7 @@ once, so it is the step with the highest peak memory.
 │   ├── common.py               shared config, thresholds, geohash, haversine
 │   ├── 01_profile.py           profiling only, mutates nothing
 │   ├── 02_preprocess.py        cleaning, transformation, feature engineering
+│   ├── 02_preprocess_spark.py  the same step in PySpark, same outputs
 │   ├── 03_validate.py          assertions + reconciliation card
 │   ├── 04_data_dictionary.py   schema docs
 │   ├── 05_kickoff_figures.py   kick-off §3–§4 figures + tables (cached)
@@ -208,8 +242,9 @@ personally identifying information. This repository stores no raw data — see
 Python 3.14.5 · pandas 3.0.3 · numpy 2.4.6 · pyarrow 25.0.1 · matplotlib 3.11.0 ·
 python-docx 1.2.0 · Pillow 12.2.0 (the last two only for the kick-off `.docx`, script `06`)
 
-PySpark is not a dependency of this pipeline. It is used only by the unexecuted
-starter code in [`for-stage-2/`](for-stage-2/README.md).
+PySpark 4.2.0 with Java 17+ (tested with Java 25), only for
+`scripts/02_preprocess_spark.py`; on Windows also `winutils.exe`/`hadoop.dll` (see
+[Preprocessing with PySpark](#preprocessing-with-pyspark)).
 
 No step samples and no step depends on random state, so the pipeline is
 deterministic: re-running it reproduces the reconciliation card exactly.

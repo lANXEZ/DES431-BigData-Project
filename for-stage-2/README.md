@@ -19,7 +19,14 @@
 Nothing in this repository has ever touched an AWS service. There is no `boto3`, no
 SDK, no credentials, and no cloud call anywhere in the codebase. The only `s3://`
 strings are placeholders. `spark_preprocess.py` has never been run, locally or on
-Glue, and `pyspark` is not listed as a dependency in `requirements.txt`.
+Glue.
+
+`scripts/02_preprocess_spark.py` is a separate PySpark implementation that **has**
+been run locally and checked against the pandas output (see the main README). It
+is the better starting point for a Glue job. This older file has known gaps: for
+example, it clips with `greatest()`/`least()`, which turn a missing coordinate
+into a distance of 0, and it uses Spark's HALF_UP `round()` where pandas rounds
+half to even.
 
 ## Why it exists
 

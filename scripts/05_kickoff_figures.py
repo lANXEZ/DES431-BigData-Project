@@ -19,9 +19,8 @@ Run:  python scripts/05_kickoff_figures.py            # re-render from cache if 
 The streaming pass takes a few minutes, so its accumulators are cached. Figure
 styling can then be iterated on without touching the raw data again.
 
-The raw CSVs are gitignored (1.1 GB). This script looks for them in, in order:
-  1. archive/CSV_Files/ inside the repo
-  2. $DIVVY_RAW_DIR
+The raw CSVs are gitignored (1.1 GB). Like every script, this one reads them from
+$DIVVY_RAW_DIR if it is set, otherwise from archive/CSV_Files/ (see common.py).
 """
 from __future__ import annotations
 import os
@@ -46,10 +45,9 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 # Locate the raw CSVs
 # ==========================================================================
 def resolve_raw_dir() -> str:
-    candidates = [C.RAW_DIR, os.environ.get("DIVVY_RAW_DIR")]
-    for d in candidates:
-        if d and os.path.isdir(d) and any(f.endswith(".csv") for f in os.listdir(d)):
-            return d
+    d = C.RAW_DIR
+    if os.path.isdir(d) and any(f.endswith(".csv") for f in os.listdir(d)):
+        return d
     raise SystemExit(
         "No raw CSVs found. Put the 12 monthly Divvy files in archive/CSV_Files/\n"
         "or point $DIVVY_RAW_DIR at them - see archive/README.md."

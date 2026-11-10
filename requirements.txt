@@ -8,7 +8,6 @@ matplotlib==3.11.0
 python-docx==1.2.0
 Pillow==12.2.0
 
-# Not needed by this pipeline. Only for running the unexecuted starter code
-# for-stage-2/spark_preprocess.py locally. 3.5.x matches the Spark runtime of
-# AWS Glue 5.0; Glue supplies its own Spark, so do not install it there.
-# pyspark==3.5.1
+# PySpark preprocessing (scripts/02_preprocess_spark.py). Needs Java 17+, and on
+# Windows winutils.exe + hadoop.dll in %HADOOP_HOME%\bin - see README.
+pyspark==4.2.0

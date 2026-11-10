@@ -216,7 +216,9 @@ agg["n_legacy_ids"] = agg.ids.str.len()
 agg["legacy_station_ids"] = agg.ids.apply(lambda x: " | ".join(x))
 station_dim = (agg[["station_key", "station_name", "lat", "lng",
                     "n_trip_endpoints", "n_legacy_ids", "legacy_station_ids"]]
-               .sort_values("n_trip_endpoints", ascending=False).reset_index(drop=True))
+               # station_key breaks ties so the row order is fully deterministic
+               .sort_values(["n_trip_endpoints", "station_key"], ascending=[False, True])
+               .reset_index(drop=True))
 station_dim.to_parquet(os.path.join(C.HAND_DIR, "station_dim.parquet"),
                        index=False, compression="snappy")
 station_dim.to_csv(os.path.join(C.HAND_DIR, "station_dim.csv"), index=False)

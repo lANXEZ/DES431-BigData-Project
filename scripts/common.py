@@ -18,7 +18,8 @@ import pandas as pd
 # Paths
 # --------------------------------------------------------------------------
 ROOT      = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW_DIR   = os.path.join(ROOT, "archive", "CSV_Files")
+# Raw CSVs live in archive/CSV_Files/ unless $DIVVY_RAW_DIR points elsewhere.
+RAW_DIR   = os.environ.get("DIVVY_RAW_DIR") or os.path.join(ROOT, "archive", "CSV_Files")
 OUT       = os.path.join(ROOT, "outputs")
 FIG_DIR   = os.path.join(OUT, "figures")
 STAT_DIR  = os.path.join(OUT, "stats")
