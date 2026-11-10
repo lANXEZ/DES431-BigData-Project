@@ -66,8 +66,10 @@ python scripts/03_validate.py         # ~2 min  → 13 checks + figures F8–F10
 python scripts/04_data_dictionary.py  # instant → data dictionaries
 ```
 
-Every script streams **one month at a time** and never holds the full 5.5 M rows in
-memory, so the whole pipeline runs on a laptop with 8 GB of RAM.
+Profiling and preprocessing stream **one month at a time** and keep only running
+aggregates, so they never hold the full 5.5 M rows in memory. `03_validate.py` is
+the exception: it loads 19 of the 33 cleaned columns for all 5.4 M rows at once, so
+it is the step with the highest peak memory.
 
 ### Repository layout
 

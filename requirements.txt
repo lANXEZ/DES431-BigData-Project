@@ -4,6 +4,11 @@ numpy==2.4.6
 pyarrow==25.0.1
 matplotlib==3.11.0
 
-# Only needed to run scripts/spark_preprocess.py locally.
-# AWS Glue supplies its own Spark runtime - do not install it there.
+# Kick-off document builder (scripts/06_build_kickoff_docx.py).
+python-docx==1.2.0
+Pillow==12.2.0
+
+# Not needed by this pipeline. Only for running the unexecuted starter code
+# for-stage-2/spark_preprocess.py locally. 3.5.x matches the Spark runtime of
+# AWS Glue 5.0; Glue supplies its own Spark, so do not install it there.
 # pyspark==3.5.1

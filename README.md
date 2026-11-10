@@ -64,18 +64,26 @@ pip install -r requirements.txt
 
 # 1. download the raw CSVs into archive/CSV_Files/  (see archive/README.md)
 
-python scripts/01_profile.py          # profiling  → outputs/stats, figures F1–F7
-python scripts/02_preprocess.py       # clean+engineer → outputs/clean (Parquet)
-python scripts/03_validate.py         # 13 checks + reconciliation card, F8–F10
-python scripts/04_data_dictionary.py  # schemas
+python scripts/01_profile.py          # profiling → stats 00–10, figures F1–F7
+python scripts/02_preprocess.py       # clean+engineer → outputs/clean, rejects, handoff, stats 11–12
+python scripts/03_validate.py         # 13 checks + reconciliation card → stats 13–14, F8–F10
+python scripts/04_data_dictionary.py  # schemas → stats 15–16
 
-# Kick-off document, sections 3-4 (needs the raw CSVs for the first run only)
+# Kick-off document, sections 3-4
 python scripts/05_kickoff_figures.py  # 21 figures K01-K21 + 7 tables
 python scripts/06_build_kickoff_docx.py   # → outputs/docs/*.docx
 ```
 
-Every script streams **one month at a time** and never holds all 5.5 M rows in
-memory, so the pipeline runs comfortably in 8 GB of RAM.
+Run them in order: each script reads what the earlier ones wrote. `05` also reads
+`outputs/handoff/station_dim.csv` (from `02`) and `03_missing_by_biketype.csv`
+(from `01`), both tracked in git. It needs the raw CSVs only on its first run, or
+with `--refresh`; after that it re-renders from a cached pass. If the CSVs are not
+in `archive/CSV_Files/`, point the `DIVVY_RAW_DIR` environment variable at them.
+
+`01`, `02` and `05` stream the raw data **one month at a time** and keep only
+running aggregates, so they never hold all 5.5 M rows in memory. `03_validate.py`
+is the exception: it loads 19 of the 33 cleaned columns for all 5.4 M rows at
+once, so it is the step with the highest peak memory.
 
 ## Repository layout
 
@@ -95,7 +103,7 @@ memory, so the pipeline runs comfortably in 8 GB of RAM.
 │   ├── spark_preprocess.py     PySpark port for AWS Glue - never executed
 │   └── athena_create_table.sql generated DDL - never run against Athena
 └── outputs/
-    ├── stats/                  19 profiling tables (tracked)
+    ├── stats/                  19 tables from scripts 01–04 (tracked)
     │   └── kickoff/            7 kick-off tables (tracked; cache gitignored)
     ├── figures/                10 report figures (tracked)
     │   └── kickoff/            21 kick-off figures K01–K21 (tracked)
@@ -111,12 +119,20 @@ memory, so the pipeline runs comfortably in 8 GB of RAM.
 flowchart LR
     A["12 raw CSVs<br/>1,119 MB<br/>5.54 M rows"] --> B["01_profile.py<br/>Data Understanding"]
     A --> C["02_preprocess.py<br/>Clean · Transform · Engineer"]
-    B --> S["outputs/stats/<br/>19 profiling tables"]
+    A --> K["05_kickoff_figures.py<br/>Kick-off §3–§4"]
+    B --> S["outputs/stats/<br/>19 tables (00–16)"]
     B --> F["outputs/figures/<br/>10 report figures"]
+    C --> S
     C --> D["outputs/clean/<br/>Parquet, year/month<br/>5.40 M rows · 33 cols"]
     C --> R["outputs/rejects/<br/>142,350 rows<br/>+ reject_reason"]
     C --> H["outputs/handoff/<br/>station_dim · flows"]
     D --> V["03_validate.py<br/>13 checks + reconciliation card"]
+    D --> DD["04_data_dictionary.py<br/>raw + clean schemas"]
+    V --> S
+    V --> F
+    DD --> S
+    H --> K
+    K --> W["06_build_kickoff_docx.py<br/>→ outputs/docs/*.docx"]
     D --> N["→ Stage 2: S3 / Glue / Athena"]
     H --> N
     D --> M["→ Stage 3: Analytics"]
@@ -128,8 +144,8 @@ flowchart LR
     classDef next    fill:#fdf0e8,stroke:#eb6834,stroke-width:1.5px,color:#0b0b0b
 
     class A input
-    class B,C,V proc
-    class S,F,R,H output
+    class B,C,V,DD,K proc
+    class S,F,R,H,W output
     class D curated
     class N,M next
 ```
@@ -189,7 +205,11 @@ personally identifying information. This repository stores no raw data — see
 
 ## Tooling
 
-Python 3.14.5 · pandas 3.0.3 · numpy 2.4.6 · pyarrow 25.0.1 · matplotlib 3.11.0
+Python 3.14.5 · pandas 3.0.3 · numpy 2.4.6 · pyarrow 25.0.1 · matplotlib 3.11.0 ·
+python-docx 1.2.0 · Pillow 12.2.0 (the last two only for the kick-off `.docx`, script `06`)
+
+PySpark is not a dependency of this pipeline. It is used only by the unexecuted
+starter code in [`for-stage-2/`](for-stage-2/README.md).
 
 No step samples and no step depends on random state, so the pipeline is
 deterministic: re-running it reproduces the reconciliation card exactly.

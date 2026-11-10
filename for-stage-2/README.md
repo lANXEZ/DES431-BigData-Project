@@ -18,8 +18,8 @@
 
 Nothing in this repository has ever touched an AWS service. There is no `boto3`, no
 SDK, no credentials, and no cloud call anywhere in the codebase. The only `s3://`
-strings are placeholders. `pyspark` is not installed in the development environment,
-so `spark_preprocess.py` could not have run even by accident.
+strings are placeholders. `spark_preprocess.py` has never been run, locally or on
+Glue, and `pyspark` is not listed as a dependency in `requirements.txt`.
 
 ## Why it exists
 
